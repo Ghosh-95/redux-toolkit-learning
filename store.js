@@ -5,7 +5,7 @@ import accountReducer from "./src/slices/accountSlice";
 import bonusReducer from "./src/slices/bonusSlice";
 
 const myStore = configureStore({
-    reducers: {
+    reducer: {
         account: accountReducer,
         bonus: bonusReducer,
     }

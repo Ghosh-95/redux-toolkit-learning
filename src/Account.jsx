@@ -1,17 +1,20 @@
 import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { decrement, increment, incrementByAmt } from "./slices/accountSlice";
 
 export default function Account() {
-    const [account, setAccount] = useState({ amount: 0 });
-    const [value, setValue] = useState(0);
+    const amount = useSelector(state => state.account.amount);
+    const dispatch = useDispatch();
 
-    const incrementByInput = (value) => setAccount({ amount: account.amount + value });
+    const [value, setValue] = useState(0);
+    const incrementByInput = (value) => dispatch(incrementByAmt(value));
 
     return (
         <div className="account-wrapper">
             <h4 className="head-point">Account Component</h4>
-            <p className="highlight-amount">Amount: ₹{account.amount}</p>
-            <button className="btn" onClick={() => setAccount({ amount: account.amount + 1 })}>Increment</button>
-            <button className="btn" onClick={() => setAccount({ amount: account.amount - 1 })}>Decrement</button>
+            <p className="highlight-amount">Amount: ₹{amount}</p>
+            <button className="btn" onClick={() => dispatch(increment())}>Increment</button>
+            <button className="btn" onClick={() => dispatch(decrement())}>Decrement</button>
 
             <div className="increment-value">
                 <input
