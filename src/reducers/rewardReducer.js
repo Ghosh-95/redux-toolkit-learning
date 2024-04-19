@@ -1,7 +1,7 @@
 import { createReducer, createAction } from '@reduxjs/toolkit';
 
 // actions
-const increment = createAction('reward/increment');
+export const increment = createAction('reward/increment');
 
 const initialState = {
     points: 15,
