@@ -30,6 +30,14 @@ export const accountSlice = createSlice({
     extraReducers(builder) {
         builder.addCase(getUserById.fulfilled, (state, action) => { // work on fulfilled action
             state.amount = action.payload;
+            state.pending = false;
+            state.error = false;
+        }).addCase(getUserById.pending, (state) => {
+            state.pending = true;
+            state.error = false;
+        }).addCase(getUserById.rejected, (state, action) => {
+            state.pending = false;
+            state.error = action.error;
         })
     }
 });
