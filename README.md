@@ -23,6 +23,7 @@ We need to import the reducer function from the slice and add it to our store. B
 
 ```js
 import { configureStore } from '@reduxjs/toolkit';
+import {actionReducer, actionReducerTwo} from './slices';
 
 const store = configureStore({
     reducer: {
@@ -48,6 +49,27 @@ state.todos[3].completed = true;
     - initialState: The initial state that should be used when the reducer is called the first time
     - builderCallback: The callback function that receives a builder object as parameter, that object define case reducers via calling `builder.addCase(actionCreator / actionType, reducer)
 
+- `builder methods`:
+    - builder.addCase() : Adds a case reducer to handle a single exact action type. Accepts two parameters: an action type string or an action created by `actionCreator`, and a reducer case function.
+
+```js
+import { createReducer, createAction } from '@reduxjs/toolkit';
+
+// actions
+export const increment = createAction('reward/increment');
+
+const initialState = {
+    points: 15,
+};
+
+const rewardReducer = createReducer(initialState, (builder) => {
+    builder.addCase(increment, (state, action) => {
+        state.points += 1;
+    })
+});
+
+export default rewardReducer;
+```
 ### createAction():
 Generates an action creator function for the given action type string.
 ```js
@@ -154,14 +176,50 @@ accepts an object of reducer functions, a slice name, and an initial state value
         }
     });
 
-export const { increment } = bonusSlice.actions;
-export default bonusSlice.reducer;
+    export const { increment } = bonusSlice.actions;
+    export default bonusSlice.reducer;
     ```
+    >You can write extraReducers as you write slice reducers (in object like structure, without using builder callback notation) as well.
 
 ### combineSlices():
 combines multiple slices into a single reducer, and allows "lazy loading" of slices after initialisation.
 ### createAsyncThunk:
-accepts an action type string and a function that returns a promise, and generates a thunk that dispatches pending/fulfilled/rejected action types based on that promise
+Accepts an action type string and a function that returns a promise, and generates a thunk that dispatches pending/fulfilled/rejected action types based on that promise.
+
+Parameters:
+ - `type`: A string that will be used to generate additional Redux action type constants, representing the lifecycle of an async request.\
+  For example, a type argument of 'users/requestStatus' will generate these action types:
+   - pending: 'users/requestStatus/pending'
+   - fulfilled: 'users/requestStatus/fulfilled'
+   - rejected: 'users/requestStatus/rejected'
+ - `payloadSelector`: A callback function that should return a promise containing the result of some asynchronous logic. It may also return a value synchronously. The 'payloadCreator' function can contain whatever logic you need to calculate an appropriate result. This could include a standard AJAX data fetch request, multiple AJAX calls with the results combined into a final value.
+```js
+export const getUserById = createAsyncThunk(
+    'account/getUser',
+    async (userId, thunkAPI) => {
+        const { data } = await axios.get(`http://localhost:8080/accounts/${userId}`);
+
+        return data.amount;
+    }
+);
+
+// You can handle the different state of that promise in extraReducers
+{
+extraReducers(builder) {
+    builder.addCase(getUserById.fulfilled, (state,action) => { // work on fulfilled action
+            state.amount = action.payload;
+            state.pending = false;
+            state.error = false;
+        }).addCase(getUserById.pending, (state) => {
+            state.pending = true;
+            state.error = false;
+        }).addCase(getUserById.rejected, (state, action) => {
+            state.pending = false;
+            state.error = action.error;
+        })
+}
+}
+```
 ### createEntityAdapter:
 generates a set of reusable reducers and selectors to manage normalized data in the store
 The createSelector utility from the Reselect library, re-exported for ease of use.
