@@ -4,13 +4,13 @@ import Bonus from "./Bonus";
 import Reward from "./Reward";
 
 export default function App() {
-  const amount = useSelector(state => state.account.amount);
+  const account = useSelector(state => state.account);
   const points = useSelector(state => state.bonus.points);
 
   return (
     <>
       <h1>Redux Toolkit</h1>
-      <h3 className="highlight-amount">Current amount: ₹{amount}</h3>
+      {account.pending ? <p className="highlight-amount">Loading....</p> : account.error ? <p className="error">{account.error.message}</p> : <h3 className="highlight-amount">Current amount: ₹{account.amount}</h3>}
 
       <h3 className="highlight-amount">Total Bonus: {points}</h3>
 
