@@ -11,8 +11,16 @@ export const adminAPI = createApi({
         getBonuses: builder.query({
             query: () => 'bonuses',
             providesTags: ['bonuses']
+        }),
+        addAccounts: builder.mutation({
+            query: (amount, id) => ({
+                url: 'accounts',
+                method: 'post',
+                body: { id, amount }
+            }),
+            invalidatesTags: ['accounts'],
         })
     }),
 });
 
-export const { useGetAccountsQuery, useGetBonusesQuery } = adminAPI;
+export const { useGetAccountsQuery, useGetBonusesQuery, useAddAccountsMutation } = adminAPI;
