@@ -6,8 +6,13 @@ export const adminAPI = createApi({
     endpoints: (builder) => ({
         getAccounts: builder.query({
             query: () => 'accounts',
+            providesTags: ['accounts'],
         }),
+        getBonuses: builder.query({
+            query: () => 'bonuses',
+            providesTags: ['bonuses']
+        })
     }),
 });
 
-export const { useGetAccountsQuery } = adminAPI;
+export const { useGetAccountsQuery, useGetBonusesQuery } = adminAPI;
