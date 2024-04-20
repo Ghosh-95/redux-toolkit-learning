@@ -15,12 +15,19 @@ export const adminAPI = createApi({
         addAccounts: builder.mutation({
             query: (amount, id) => ({
                 url: 'accounts',
-                method: 'post',
-                body: { id, amount }
+                method: 'POST',
+                body: { id, amount: +amount }
+            }),
+            invalidatesTags: ['accounts'],
+        }),
+        deleteAccounts: builder.mutation({
+            query: (id) => ({
+                url: `accounts/${id}`,
+                method: 'DELETE',
             }),
             invalidatesTags: ['accounts'],
         })
     }),
 });
 
-export const { useGetAccountsQuery, useGetBonusesQuery, useAddAccountsMutation } = adminAPI;
+export const { useGetAccountsQuery, useGetBonusesQuery, useAddAccountsMutation, useDeleteAccountsMutation } = adminAPI;
