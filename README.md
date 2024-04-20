@@ -19,19 +19,38 @@ Wraps `createStore` to provide simplified configuration options and good default
 
 We need to import the reducer function from the slice and add it to our store. By defining a field inside the reducer parameter, we tell the store to use this slice reducer function to handle all updates to that state.
 
-`reducer`: If this is a single function like *reducer: rootReducer*, it will be directly used as the root reducer for the store. If it is an object of slice reducers, like *{users : usersReducer, posts : postsReducer}*, **configureStore** will automatically create the root reducer by passing this object to the Redux combineReducers utility
+- `reducer`: If this is a single function like *reducer: rootReducer*, it will be directly used as the root reducer for the store. If it is an object of slice reducers, like *{users : usersReducer, posts : postsReducer}*, **configureStore** will automatically create the root reducer by passing this object to the Redux combineReducers utility
 
-```js
-import { configureStore } from '@reduxjs/toolkit';
-import {actionReducer, actionReducerTwo} from './slices';
+    ```js
+    import { configureStore } from '@reduxjs/toolkit';
+    import {actionReducer, actionReducerTwo} from './slices';
 
-const store = configureStore({
-    reducer: {
-        action: actionReducer,
-        actionTwo: actionReducerTwo,
-    },
-});
-```
+    const store = configureStore({
+        reducer: {
+            // reducer-path: reducer
+            action: actionReducer,
+            actionTwo: actionReducerTwo,
+        },
+    });
+    ```
+- `middleware`: A callback which will receive *getDefaultMiddleware* as its argument, and should return a middleware array.
+
+    If this option is provided, it should return all the middleware functions you want added to the store. **configureStore** will automatically pass those to 'applyMiddleware'.
+
+    If not provided, **configureStore** will call *getDefaultMiddleware* and use the array of middleware functions it returns.
+
+    ```js
+    import { configureStore } from '@reduxjs/toolkit';
+    import { someAPI } from './someApiSlice';
+
+    export const store = configureStore({
+        reducer: {
+            [someAPI.reducerPath]: someAPI.reducer,
+        },
+
+        middleWare: (getDefaultMiddleware) => getDefaultMiddleware().concat(someAPI.middleware),
+    })
+    ```
 
 ### createReducer():
 Lets you supply a lookup table of action types to case reducer functions, rather than writing *switch statements*. In addition, it automatically uses the `immer` library to let you write simpler immutable updates with normal mutative code, like:
@@ -148,6 +167,7 @@ accepts an object of reducer functions, a slice name, and an initial state value
   - However, unlike the 'reducers' field, each individual case reducer inside of 'extraReducers' will not generate a new action type or action creator.
   - If two fields from 'reducers' and 'extraReducers' happen to end up with the same action type string, the function from 'reducers' will be used to handle that action type.
   - Similar to `createReducer`, the 'extraReducers' field uses a "builder callback" notation to define handlers for specific action types, matching against a range of actions, or handling a default case. It's particularly useful for working with actions produced by `createAction` and `createAsyncThunk`.
+  
     ```js
     import { createAction, createSlice } from "@reduxjs/toolkit"
 
@@ -223,3 +243,99 @@ extraReducers(builder) {
 ### createEntityAdapter:
 generates a set of reusable reducers and selectors to manage normalized data in the store
 The createSelector utility from the Reselect library, re-exported for ease of use.
+
+# RTK Query
+RTK Query is a powerful data fetching and caching tool. It is designed to simplify common cases for loading data in a web application, eleminating the need of hand-write data fetching & caching logic yourself. RTK Query is an optional addon included in the Redux Toolkit package, and its functionality is built on top of the other APIs in Redux Toolkit.
+
+Web applications normally need to fetch data from a server in order to display it. They also usually need to make updates to that data, send those updates to the server, and keep the cached data on the client in sync with the data on the server. This is made more complicated by the need to implement other behaviors used in today's applications:
+
+- Tracking loading state in order to show UI spinners
+- Avoiding duplicate requests for the same data (caching)
+- Optimistic updates to make the UI feel faster
+- Managing cache lifetimes as the user interacts with the UI
+
+## APIs
+RTK Query is included within the installation of the core Redux Toolkit package. It is available via either of the two entry points below:
+
+```js
+import { createApi } from '@reduxjs/toolkit/query';
+
+/* React-specific entry point that automatically generates
+   hooks corresponding to the defined endpoints */
+import { createApi } from '@reduxjs/toolkit/query/react';
+```
+
+### createApi():
+The core of RTK Query's functionality. It allows you to define a set of "endpoints" that describe how to retrieve data from backend APIs and other async sources, including the configuration of how to fetch and transform that data. In most cases, you should use this once per app, with "one API slice per base URL" as a rule of thumb. Export the API created by this method to add in the Redux store. You need to add a middleware to sotre for the API.
+
+Parameters:
+
+- reducerPath: The reducerPath is a unique key that your service will be mounted to in your store. If you call createApi more than once in your application, you will need to provide a unique value each time. Defaults to 'api'.
+    ```js
+    import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query'
+
+    const apiOne = createApi({
+    reducerPath: 'apiOne',
+        // ...rest of the code        
+    })
+
+    const apiTwo = createApi({
+    reducerPath: 'apiTwo',
+        // ...rest of the code
+    })
+    ```
+- baseQuery: The base query used by each endpoint if no queryFn option is specified. RTK Query exports a utility called `fetchBaseQuery` as a lightweight wrapper around fetch for common use-cases.
+    ```js
+    import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query'
+
+    const api = createApi({
+    reducerPath: 'apiOne',
+    baseQuery: fetchBaseQuery({ baseUrl: '/' }),
+    })
+    ```
+
+- endpoints: Endpoints are just a set of operations that you want to perform against your server. You define them as an object using the builder syntax. There are two basic endpoint types: query and mutation.
+
+    - `query` can be a function that returns either a string or an object which is passed to your `baseQuery`. If you are using `fetchBaseQuery`, this can return either a string or an object of properties in FetchArgs. Defines the field using **build.query()** method.
+
+        These endpoints can be exported as auto-generated hooks to perform tasks and the arguments passed into those hooks will pass as arguments to the **query** functions. Those hooks will return an object, which contain data returned from the url, error message and other properties.
+
+    - `mutaion` endpoints are defined by returning an object inside the endpoints section of createApi, and defining the fields using the **build.mutation()** method. Its query function is used to construct the URL along with additional information to be send with the url.
+
+        These endpoints can also be exprted as hooks. These hooks returns an array contains a modifier function and a response object. Modifier function takes the arguments and passes to the mutaion's query callback function.
+        
+    ```js
+    import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+    export const adminAPI = createApi({
+        reducerPath: 'admin',
+        baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:8080/' }),
+        endpoints: (builder) => ({
+            getAccounts: builder.query({
+                query: () => 'accounts',
+                providesTags: ['accounts'],
+            }),
+            addAccounts: builder.mutation({
+                query: (amount, id) => ({
+                    url: 'accounts',
+                    method: 'post',
+                    body: { id, amount }
+                }),
+                invalidatesTags: [],
+            })
+        }),
+    });
+
+    export const { useGetAccountsQuery, seAddAccountsMutation } = adminAPI;
+    ```
+
+- providesTags: *Used by query endpoints*. Determines which 'tag' is attached to the cached data returned by the query. 
+
+    Expects an array of tag type strings, an array of objects of tag types with ids, or a function that returns such an array. (generally used while reading data from an url)
+
+- invalidatesTags: *Used by mutation endpoints*. Determines which cached data should be either re-fetched or removed from the cache. Expects the same shapes as providesTags.
+- transformResponse: Used to sort resonse objects
+    ```js
+    // transform a dummy data by id 
+    transformResponse: (response) => response.sort((a, b) => a.id - b.id);
+    ```
