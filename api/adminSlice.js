@@ -26,8 +26,16 @@ export const adminAPI = createApi({
                 method: 'DELETE',
             }),
             invalidatesTags: ['accounts'],
+        }),
+        updateAccounts: builder.mutation({
+            query: ({ id, amount }) => ({
+                url: `accounts/${id}`,
+                method: 'PATCH',
+                body: { amount: +amount }
+            }),
+            invalidatesTags: ['accounts']
         })
     }),
 });
 
-export const { useGetAccountsQuery, useGetBonusesQuery, useAddAccountsMutation, useDeleteAccountsMutation } = adminAPI;
+export const { useGetAccountsQuery, useGetBonusesQuery, useAddAccountsMutation, useDeleteAccountsMutation, useUpdateAccountsMutation } = adminAPI;

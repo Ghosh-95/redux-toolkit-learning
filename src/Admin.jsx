@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useGetAccountsQuery, useGetBonusesQuery, useAddAccountsMutation, useDeleteAccountsMutation } from "../api/adminSlice";
+import { useGetAccountsQuery, useGetBonusesQuery, useAddAccountsMutation, useDeleteAccountsMutation, useUpdateAccountsMutation } from "../api/adminSlice";
 
 export default function Admin() {
     const [amount, setAmount] = useState(0);
     const [userId, setUserId] = useState('');
-    const [delUserId, setDelUserId] = useState('');
+    const [updateAmt, setUpateAmt] = useState(0);
 
     const { data: accData, error: accError, isLoading: accIsLoading } = useGetAccountsQuery();
 
@@ -12,6 +12,7 @@ export default function Admin() {
 
     const [addAccounts, addResponse] = useAddAccountsMutation();
     const [deleteAccounts, delResponse] = useDeleteAccountsMutation();
+    const [updateAccounts] = useUpdateAccountsMutation();
     return (
         <div className="admin">
             <h4>Admin component</h4>
@@ -19,7 +20,14 @@ export default function Admin() {
             <div className="p-wrap">
                 <div>
                     <h5>Accounts</h5>
-                    {accData && accData.map(acc => <p className="p-display" key={acc.id}>User-{acc.id}: ₹{acc.amount}</p>)}
+                    {accData && accData.map(acc => (
+                        <div key={acc.id}>
+                            <p className="p-display" >User-{acc.id}: ₹{acc.amount}</p>
+                            <button onClick={() => deleteAccounts(acc.id)}>Delete</button>
+                            <input type="number" onChange={(e) => setUpateAmt(+e.target.value)} />
+                            <button onClick={() => updateAccounts({ id: acc.id, amount: updateAmt })}>Update</button>
+                        </div>
+                    ))}
                 </div>
                 <div>
                     <h5>Bonus Points</h5>
@@ -31,11 +39,6 @@ export default function Admin() {
                 <input type="number" placeholder="insert amount" id="amount" onChange={(e) => setAmount(+e.target.value)} />
                 <input type="text" placeholder="insert id" id="userId" onChange={(e) => setUserId(e.target.value)} />
                 <button onClick={() => userId && amount && addAccounts(amount, userId)}>Add Account</button>
-            </div>
-            <div className="del-userAcc">
-                {delResponse.status === 'rejected' && <p className="error">{delResponse.error.data}</p>}
-                <input type="text" placeholder="insert id to delete" id="delUserId" onKeyDown={(e) => e.key === "Enter" && delUserId && deleteAccounts(delUserId)} onChange={(e) => setDelUserId(e.target.value)} />
-                <button onClick={() => delResponse.status === 'fulfilled' && delUserId && deleteAccounts(delUserId)}>Delete</button>
             </div>
         </div>
     )
