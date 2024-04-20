@@ -1,30 +1,26 @@
 {
-    "accounts": [
-        {
-            "id": 1,
-            "amount": 200
-        },
-        {
-            "id": 2,
-            "amount": 500
-        },
-        {
-            "id": 3,
-            "amount": 100
-        }
-    ],
-    "bonuses": [
-        {
-            "id": 1,
-            "points": 2
-        },
-        {
-            "id": 2,
-            "points": 4
-        },
-        {
-            "id": 3,
-            "points": 1
-        }
-    ]
+  "accounts": [
+    {
+      "id": "35ee",
+      "amount": 345
+    },
+    {
+      "id": "76bd",
+      "amount": 454878
+    }
+  ],
+  "bonuses": [
+    {
+      "id": "1",
+      "points": 2
+    },
+    {
+      "id": "2",
+      "points": 4
+    },
+    {
+      "id": "3",
+      "points": 1
+    }
+  ]
 }
